@@ -9,7 +9,6 @@ If you want to avoid re-computation, we are happy to provide our computations up
 1. Creation and description of the data sets (see folder Data)
 2. Conduction of experiments (see folder Experiments)
 3. Evaluation of the experiments (see folders Descriptive results, Descriptive other and Random results)
-4. For the resulting plots of which some are used in the paper see folder Plots
 
 
 ## Data:
