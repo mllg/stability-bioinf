@@ -48,18 +48,11 @@ stomach$Patient <- substr(stomach$Patient, 1, 12)
 # merge gene expression and patient information
 stomach_all <- merge(x = stomach, y = stomach_info, by.x = "Patient", by.y = "bcr_patient_barcode")
 
+# transformation log(x+1)
+stomach_all[, 2:29700] <- apply(stomach_all[, 2:29700], 2, function(x) log(x + 1))
+
 # consider only types C16.1 (110) and C16.3 (105)
 stomach_two <- stomach_all[stomach_all$icd_10 %in% c("C16.1", "C16.3"),]
-
-# analyze correlation of duplicates
-# dup <- which(stomach_two$Patient %in% stomach_two$Patient[duplicated(stomach_two$Patient)])
-# dup_split <- split(dup, stomach_two$Patient[dup])
-# cor_dup <- unlist(lapply(dup_split, function(x) cor(as.numeric(stomach_two[x[1], 2:29700]), 
-#                                                     as.numeric(stomach_two[x[2], 2:29700]))))
-# summary(cor_dup)
-# cor_all <- cor(t(stomach_two[, 2:29700]))
-# cor_all_v <- cor_all[cor_all < 1]
-# summary(cor_all_v)
 
 target <- droplevels(stomach_two$icd_10)
 Stomach <- cbind(target = target, stomach_two[, 2:29700])

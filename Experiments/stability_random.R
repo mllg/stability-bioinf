@@ -770,6 +770,6 @@ addAlgorithm(reg, id = "random_forest_variance", fun = algo_random_forest_varian
 #######################################################
 
 addExperiments(reg, repls = 1000, skip.defined = TRUE)
-submitJobs(reg, getJobIds(reg), resources = list(memory = 16*1024), job.delay = TRUE)
+submitJobs(reg, getJobIds(reg), resources = list(memory = 15000, walltime = 3600), job.delay = TRUE)
 
 

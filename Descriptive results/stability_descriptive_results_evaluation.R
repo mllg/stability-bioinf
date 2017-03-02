@@ -40,8 +40,8 @@ ggbox <- ggplot(measures_melt, aes(x = variable, y = value)) +
   geom_boxplot() +
   labs(y = "Stability values", x = "Stability measures") +
   scale_x_discrete(expand = c(0, 0), labels = measure_names) +
-  theme(axis.title = element_text(size = 12),
-        axis.text = element_text(size = 11))
+  theme(axis.title = element_text(size = 11),
+        axis.text = element_text(size = 10))
 
 pdf("..\\Plots\\measures_boxplots.pdf", width = 6.5, height = 3, useKerning = FALSE)
 print(ggbox)
@@ -54,7 +54,7 @@ source("ggplot_functions.R")
 cor <- cor(measures, use = "pairwise.complete.obs")
 gghm <- heatmap_ggplot(cor, measure_names)
 
-pdf("..\\Plots\\heatmap_all.pdf", height = 4, width = 8, useKerning = FALSE)
+pdf("..\\Plots\\heatmap_all.pdf", height = 8, width = 8, useKerning = FALSE)
 print(gghm)
 dev.off()
 
@@ -69,7 +69,7 @@ for(i in 1: length(measures_split))
 
 # do this analysis seperately for all classifiers and filter methods
 measures_split <- split(measures, results$algo)
-names(measures_split) <- c("GLM boosting", "Lasso Log. Reg.", "Random Forest", "SVM")
+names(measures_split) <- c("GLM Boosting", "Lasso Log. Reg.", "Random Forest", "SVM")
 filter_split <- split(results$fw.method, results$algo)
 
 for(i in 1:length(measures_split))
@@ -84,7 +84,7 @@ for(i in 1:length(measures_split))
     gghm <- heatmap_ggplot(cor_split, measure_names, title)
 
     file <- paste0("..\\Plots\\heatmap_", i,"_" , j, ".pdf")
-    pdf(file, height = 4, width = 8, useKerning = FALSE)
+    pdf(file, height = 8, width = 8, useKerning = FALSE)
     print(gghm)
     dev.off()
   }
@@ -118,24 +118,25 @@ gg_scatter_matrix <- function(indices, title = element_blank())
     facet_grid(variable ~ variable2, labeller = "label_parsed") + 
     scale_colour_gradient(high = "darkred", low = "lightgoldenrod1", limits = c(0, 10935), name = "Size") + 
     scale_x_continuous(breaks = seq(0, 1, by = 0.2)) +
-    scale_y_continuous(breaks = seq(0, 1, by = 0.2))
+    scale_y_continuous(breaks = seq(0, 1, by = 0.2)) +
+    coord_equal(ratio = 1)
   
   return(scatter_matrix)
 }
 
-pdf(file = "..\\Plots\\scatter_glmboost.pdf", width = 20, height = 10)
-print(gg_scatter_matrix(which(results$algo == "glmboost"), "GLM boosting"))
+pdf(file = "..\\Plots\\scatter_glmboost.pdf", width = 20, height = 20)
+print(gg_scatter_matrix(which(results$algo == "glmboost"), "GLM Boosting"))
 dev.off()
 
-pdf(file = "..\\Plots\\scatter_logreg.pdf", width = 20, height = 10)
+pdf(file = "..\\Plots\\scatter_logreg.pdf", width = 20, height = 20)
 print(gg_scatter_matrix(which(results$algo == "logreg"), "Lasso Logistic Regression"))
 dev.off()
 
-pdf(file = "..\\Plots\\scatter_rf.pdf", width = 20, height = 10)
+pdf(file = "..\\Plots\\scatter_rf.pdf", width = 20, height = 20)
 print(gg_scatter_matrix(which(results$algo == "random_forest"), "Random Forest"))
 dev.off()
 
-postscript(file = "..\\Plots\\scatter_svm.ps", width = 20, height = 10)
+postscript(file = "..\\Plots\\scatter_svm.ps", width = 20, height = 20)
 print(gg_scatter_matrix(which(results$algo == "svm"), "SVM"))
 dev.off()
 
@@ -160,16 +161,16 @@ size_stability <- melt(size_stability, id.vars = c("size", "algo"))
 
 ggmatrix <- ggplot(size_stability, aes(x = size, y = value, color = algo)) +
   geom_point(size = 1) + 
-  labs(x = "Mean size of chosen feature sets", y = "Stability value") + 
+  labs(x = "Mean size of chosen features sets", y = "Stability value") + 
   facet_wrap( ~ variable, ncol = 4, labeller = "label_parsed") + 
   theme(legend.position = "bottom", 
-        legend.title = element_text(size = 15),
-        legend.text = element_text(size = 15),
-        axis.title = element_text(size = 15),
+        legend.title = element_text(size = 13),
+        legend.text = element_text(size = 13),
+        axis.title = element_text(size = 13),
         axis.text = element_text(size = 11),
-        strip.text.x = element_text(size = 15)) + 
+        strip.text.x = element_text(size = 12)) + 
   scale_color_discrete(name = "Classifier", 
-                       labels = c("GLM boosting", "Lasso Log. Reg.", 
+                       labels = c("GLM Boosting", "Lasso Log. Reg.", 
                                   "Random Forest", "SVM")) + 
   guides(colour = guide_legend(override.aes = list(size = 2)))
 
@@ -197,7 +198,7 @@ for(i in 1:length(results_pareto))
 
 ggbin <- binary_heatmap_ggplot(pareto_models, measure_names)
 
-pdf("..\\Plots\\heatmap_optimal.pdf", height = 3.5, width = 7.25, useKerning = FALSE)
+pdf("..\\Plots\\heatmap_optimal.pdf", height = 3, width = 7.25, useKerning = FALSE)
 print(ggbin)
 dev.off()
 
@@ -225,4 +226,13 @@ results_flip[best_indices[[1]],]
 
 # best classification accuracy
 summary(results$mmce.test.mean)
+results_flip[results_flip$mmce.test.mean == min(results_flip$mmce.test.mean), ]
 
+
+# consider only accuracy and size
+dat <- subset(results, select = c("mmce.test.mean", "mean_size"))
+plot(dat)
+dat_mco <- mco::paretoFilter(as.matrix(dat))
+points(dat_mco, col = "red")
+
+plot(dat_mco, log = "y")
