@@ -9,6 +9,8 @@ load("AP_Colon_Kidney.RData")
 load("AP_Breast_Ovary.RData")
 load("Stomach.RData")
 
+if(!file.exists("\\Plots")) dir.create("\\Plots")
+
 
 plot_pca <- function(data, pca, m)
 {
@@ -17,7 +19,7 @@ plot_pca <- function(data, pca, m)
   
   pcs_part <- cbind(as.data.frame(pcs[, 1:2]), Class = data$target)
   
-  pcgg <- ggplot(pcs_part, aes(x = PC1, y = PC2, color = Class)) +
+  pcgg <- ggplot(pcs_part, aes(x = PC1, y = PC2, color = Class, shape = Class)) +
     geom_point(size = 2) + 
     coord_equal(ratio = 1) +
     labs(x = paste0("PC1 (", round(exp[1] * 100, 2), "% of data variation)"),
@@ -37,7 +39,7 @@ pca_BO <- prcomp(m_BO, scale = FALSE)
 # explained variation
 sum(pca_BO$sdev[1:2]^2)/sum(pca_BO$sdev^2)
 
-pdf("..\\Plots\\pca_BO.pdf", height = 5, width = 5, useKerning = FALSE)
+pdf("\\Plots\\pca_BO.pdf", height = 5, width = 5, useKerning = FALSE)
 print(plot_pca(AP_Breast_Ovary, pca_BO, m_BO))
 dev.off()
 
@@ -49,7 +51,7 @@ pca_CK <- prcomp(m_CK, scale = FALSE)
 # explained variation
 sum(pca_CK$sdev[1:2]^2)/sum(pca_CK$sdev^2)
 
-pdf("..\\Plots\\pca_CK.pdf", height = 5, width = 5, useKerning = FALSE)
+pdf("\\Plots\\pca_CK.pdf", height = 5, width = 5, useKerning = FALSE)
 print(plot_pca(AP_Colon_Kidney, pca_CK, m_CK))
 dev.off()
 
@@ -62,7 +64,7 @@ pca_St <- prcomp(m_St, scale = FALSE)
 # explained variation
 sum(pca_St$sdev[1:2]^2)/sum(pca_St$sdev^2)
 
-pdf("..\\Plots\\pca_St.pdf", height = 5, width = 5, useKerning = FALSE)
+pdf("\\Plots\\pca_St.pdf", height = 5, width = 5, useKerning = FALSE)
 print(plot_pca(Stomach, pca_St, m_St))
 dev.off()
 
