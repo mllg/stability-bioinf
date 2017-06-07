@@ -139,7 +139,7 @@ best_accuracy <- function(dataset)
   data[data$performance_train.mmce.test.mean == best_acc, ]
 }
 
-pdf("..\\Plots\\pareto_stab_size_joint.pdf", height = 6.5, width = 8)
+pdf("..\\Plots\\pareto_stability_size.pdf", height = 6.5, width = 8)
 print(joint_pareto(paretos_stab_size_BO, c(7, 3, 1, 5), "AP_Breast_Ovary", 
                    colnames(results)[14:25], "mean_size_train", "performance_train.mmce.test.mean",
                    "1 - Stability value", "Mean number of chosen features", "Error", 
@@ -431,14 +431,14 @@ feats_CK
 #      1      9     57 
 
 # orignal names of genes for AP_Colon_Kidney
-data_CK <- foreign::read.arff("..\\Data\\AP_Colon_Kidney.arff")
+data_CK <- foreign::read.arff("..\\..\\Data\\AP_Colon_Kidney.arff")
 data_CK <- subset(data_CK, select = -c(Tissue, ID_REF))
 feats_CK_pos <- as.numeric(substring(names(feats_CK), first  = 2))
 feats_orig <- colnames(data_CK)[feats_CK_pos]
 feats_orig
 # "46323_at"    "201839_s_at" "224596_at"  
 
-load("..\\Data\\AP_Colon_Kidney.RData")
+load("..\\..\\Data\\AP_Colon_Kidney.RData")
 ggboxplot <- function(gene, gene_name)
 {
   ggplot(AP_Colon_Kidney, aes(x = target, y = get(gene))) + 

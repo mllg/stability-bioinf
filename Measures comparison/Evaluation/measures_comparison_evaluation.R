@@ -43,12 +43,13 @@ colnames(results_flip)[measures_indices] <- paste("1 -",colnames(results_flip)[m
 summary(measures)
 
 # Boxplots of measure values
-measures_melt <- cbind(id = rownames(measures), as.data.frame(measures))
+boxplot_order <- c(7, 6, 10, 12, 8, 2:5, 9, 11, 1)
+measures_melt <- cbind(id = rownames(measures), as.data.frame(measures)[, boxplot_order])
 measures_melt <- melt(measures_melt, id.vars = "id")
 ggbox <- ggplot(measures_melt, aes(x = variable, y = value)) + 
   geom_boxplot() +
   labs(y = "Stability values", x = "Stability measures") +
-  scale_x_discrete(expand = c(0, 0), labels = measure_names) +
+  scale_x_discrete(expand = c(0, 0), labels = measure_names[boxplot_order]) +
   theme(axis.title = element_text(size = 11),
         axis.text = element_text(size = 10))
 
@@ -56,50 +57,8 @@ pdf("..\\Plots\\measures_boxplots.pdf", width = 6.5, height = 3, useKerning = FA
 print(ggbox)
 dev.off()  
 
-#################### heatmap #######################
-# Heatmaps
-source("ggplot_functions.R")
 
-cor <- cor(measures, use = "pairwise.complete.obs")
-gghm <- heatmap_ggplot(cor, measure_names)
-
-pdf("..\\Plots\\heatmap_all.pdf", height = 8, width = 8, useKerning = FALSE)
-print(gghm)
-dev.off()
-
-# do this analysis seperately for all classifiers and filter methods
-measures_split <- split(measures, results$algo)
-filter_split <- split(results$fw.method, results$algo)
-
-for(i in 1:length(measures_split))
-{
-  measures_split2 <- split(measures_split[[i]], filter_split[[i]])
-  
-  for(j in 1:length(measures_split2))
-  {
-    cor_split <- cor(measures_split2[[j]], use = "pairwise.complete.obs")
-    title <- paste0(names(measures_split)[i], " & ", names(measures_split2)[j])
-    gghm <- heatmap_ggplot(cor_split, measure_names, title)
-
-    file <- paste0("..\\Plots\\heatmap_", i,"_" , j, ".pdf")
-    pdf(file, height = 8, width = 8, useKerning = FALSE)
-    print(gghm)
-    dev.off()
-  }
-}
-
-########## correlation depending on size ###############
-sizes <- (1 + 25):(max(results$mean_size) - 25)
-cors <- sapply(sizes, function(s){
-  res <- results[results$mean_size >= s - 25 & results$mean_size <= s + 25, , drop  = FALSE]
-  if(nrow(res) < 2) return(NA)
-  cor(res$lustgarten, res$cor_pearson)
-})
-plot(cors, type = "l")
-
-
-########### analysis of different classifiers ###########
-
+########### scatter plot matrix ###########
 gg_scatter_matrix <- function(indices, title = element_blank())
 {
   order <- c(9, 10, 6, 12, 7, 2, 3, 4, 5, 8, 1, 11)
@@ -142,22 +101,6 @@ gg_scatter_matrix <- function(indices, title = element_blank())
   return(scatter_matrix)
 }
 
-pdf(file = "..\\Plots\\scatter_glmboost.pdf", width = 20, height = 20)
-print(gg_scatter_matrix(which(results$algo == "GLM Boosting"), "GLM Boosting"))
-dev.off()
-
-pdf(file = "..\\Plots\\scatter_logreg.pdf", width = 20, height = 20)
-print(gg_scatter_matrix(which(results$algo == "Lasso Log. Reg."), "Lasso Logistic Regression"))
-dev.off()
-
-pdf(file = "..\\Plots\\scatter_rf.pdf", width = 20, height = 20)
-print(gg_scatter_matrix(which(results$algo == "Random Forest"), "Random Forest"))
-dev.off()
-
-pdf(file = "..\\Plots\\scatter_svm.pdf", width = 20, height = 20)
-print(gg_scatter_matrix(which(results$algo == "SVM"), "SVM"))
-dev.off()
-
 pdf(file = "..\\Plots\\scatter_all.pdf", width = 20, height = 20)
 print(gg_scatter_matrix(1:12000))
 dev.off()
@@ -185,23 +128,14 @@ ggmatrix <- ggplot(size_stability, aes(x = size, y = value)) +
   geom_point(size = 1, color = "black", alpha = 0.25) + 
   labs(x = "Mean number of chosen features", y = "Stability value") + 
   facet_wrap( ~ variable, ncol = 4, labeller = "label_parsed") + 
-  theme(# legend.position = "right", 
-        # legend.title = element_text(size = 13),
-        # legend.text = element_text(size = 13),
-        axis.title = element_text(size = 13),
+  theme(axis.title = element_text(size = 13),
         axis.text = element_text(size = 11),
         strip.text.x = element_text(size = 12)) 
-  # scale_color_manual(values = 
-  #                      c("firebrick1", "firebrick3", "firebrick4",
-  #                        "steelblue1", "steelblue3", "steelblue4", 
-  #                        "darkgoldenrod1", "darkgoldenrod3", "darkgoldenrod4",
-  #                        "mediumorchid1", "mediumorchid3", "mediumorchid4"),
-  #                    name = "Wrapper method") + 
-  # guides(colour = guide_legend(override.aes = list(size = 2)))
 
 pdf("..\\Plots\\size_stability.pdf", height = 6, width = 8, useKerning = FALSE)
 print(ggmatrix)
 dev.off()
+
 
 ########## optimal models ##########################
 
@@ -222,42 +156,9 @@ for(i in 1:length(results_pareto))
   pareto_models[paretos %in% results_pareto[[i]]$pareto_indices, i] <- 1
 }
 
-ggbin <- binary_heatmap_ggplot(pareto_models, measure_names)
+ggbin <- binary_heatmap_ggplot(pareto_models, measure_names, rev(c(9, 10, 6, 12, 7, 2:5, 8, 1, 11)))
 
 pdf("..\\Plots\\heatmap_optimal.pdf", width = length(paretos) / 20, height = 3, useKerning = FALSE)
 print(ggbin)
 dev.off()
-
-
-
-###################################################################
-
-# analysis why SL behaves so oddly in size_stability
-inds <- which(results$prob == "AP_Breast_Ovary" & results$mean_size >= 10500 & results$lustgarten >= 0.525)
-f <- features[[inds[1]]]
-
-res <- matrix(0, ncol = 10, nrow = 10)
-for(i in 1:9)
-{
-  for(j in (i+1):10)
-  {
-    res[i, j] <- length(intersect(f[[i]], f[[j]])) / results$mean_size[inds[1]]
-  }
-}
-# for large values of mean size, the intersection is at least 200 smaller than the equally sizes sets
-# -> analyse: cardinality(V_i) = cardinality(V_j) = x and cardinality(intersection(V_i, V_j)) = x - 200
-# plot for different values of x explains odd behaviour!
-f1 <- function(x) 1 - 200/x - x/10000
-f2 <- function(x) (x - 200 - x^2 / 10000) / (10000 - x)
-curve(f1, from = 200, to = 5000, xlim = c(200, 10000), main = "SL")
-curve(f2, from = 5000, to = 10000, add = TRUE)
-
-# same analysis for SC
-f3 <- function(x) cor(c(rep(1, x), rep(0, 10000 - x)), c(rep(0, 100), rep(1, x), rep(0, 10000 - 100 - x)))
-f3_values <- sapply(200:9800, f3)
-plot(f3_values, x = 200:9800, type = "l", main = "SC")
-
-# same analysis for SJ
-f4 <- function(x) (x - 200) / x
-curve(f4, from = 200, to = 10000, main = "SJ")
 
